@@ -1,4 +1,4 @@
-[Unit]
+[unit]
 Description=Gunicorn instance to serve AirBnB Clone
 # Start after the network is available
 After=network.target
