@@ -1,22 +1,16 @@
 #!/usr/bin/env bash
 # Gracefully reloads Gunicorn.
 
-# Find Gunicorn process IDs
-gunicorn_pids=$(pgrep gunicorn)
+# sudo systemctl reload gunicorn.service > /dev/null 2>
+MASTER_PID=$(pgrep -f "gunicorn: master")
 
-if [ -z "$gunicorn_pids" ]; then
-    echo "No Gunicorn processes found."
-    exit 1
-fi
+# Send a signal to reload Gunicorn gracefully
+kill -HUP "$MASTER_PID" >/dev/null 2>&1
 
-# Stop old workers gracefully
-echo "Stopping old workers gracefully..."
-for pid in $gunicorn_pids; do
-    kill -HUP "$pid"
+# Wait for the master process to acknowledge the reload
+while kill -0 "$MASTER_PID" >/dev/null 2>&1; do
+    sleep 1
 done
 
-# Wait for old workers to finish processing
-echo "Waiting for old workers to finish processing..."
-sleep 5
-
-echo "Graceful reload complete"
+# Notify the master process that workers were renewed
+kill -USR2 "$MASTER_PID" >/dev/null 2>&1
